@@ -1180,22 +1180,6 @@ function renderPracticePlan(items) {
   });
 }
 
-function setEditableText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value || "";
-}
-
-function renderQualityNote(note) {
-  const el = document.getElementById("qualityNote");
-  if (!el) return;
-  if (note) {
-    el.textContent = note;
-    el.classList.remove("hidden");
-  } else {
-    el.classList.add("hidden");
-  }
-}
-
 function renderCoachingPriorities(items) {
   const wrap = document.getElementById("coaching-priorities-wrap");
   if (!wrap) return;
