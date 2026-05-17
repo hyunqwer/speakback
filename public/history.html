@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이전 피드백 보기 · Yoon's SpeakBack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo">Yoon's Speak<em>Back</em></div>
+  </header>
+
+  <main>
+    <div id="listView">
+      <div class="card">
+        <div class="fb-row">
+          <div class="card-head">이전 피드백 목록</div>
+          <a href="index.html" class="copy-btn">새 분석</a>
+        </div>
+        <div id="feedbackList">
+          <p class="loading-placeholder">불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="detailView" class="hidden">
+      <div class="card">
+        <button class="copy-btn" onclick="showList()" type="button">목록으로</button>
+        <div class="result-meta detail-meta">
+          <strong id="d-studentName"></strong>
+          <span id="d-meta"></span>
+        </div>
+
+        <div id="d-result-yoon" class="rubric-result hidden">
+          <div class="fb-block">
+            <div class="fb-lbl">종합 피드백</div>
+            <div id="d-fb-overall" class="fb-text fb-gen"></div>
+          </div>
+          <div class="card inner-card">
+            <div class="fb-title">발표 태도</div>
+            <div id="d-fb-presentation" class="fb-text fb-well"></div>
+          </div>
+          <div class="card inner-card">
+            <div class="fb-title">전달력</div>
+            <div id="d-fb-communication" class="fb-text fb-impr"></div>
+          </div>
+          <div class="card inner-card">
+            <div class="fb-title">내용 구성</div>
+            <div id="d-fb-content" class="fb-text fb-miss"></div>
+          </div>
+          <div class="card inner-card">
+            <div class="fb-title">다음 연습 계획</div>
+            <div id="d-fb-advice" class="fb-text fb-gen"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" onclick="showList()" type="button">목록으로</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="history.js"></script>
+</body>
+</html>
