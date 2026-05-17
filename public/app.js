@@ -93,7 +93,7 @@ function bindPageActions() {
     btn.addEventListener("click", () => setStudentLevel(btn.dataset.level));
   });
   // 학부모 요약 복사 버튼
-  document.getElementById("copyParentSummaryBtn")?.addEventListener("click", copyParentSummary);
+  document.getElementById("copyTeacherCommentBtn")?.addEventListener("click", copyTeacherComment);
 }
 
 // ── 사용 방법 가이드 모달 ──────────────────────────────────
@@ -1088,64 +1088,96 @@ function displayYoonResult(ev) {
   document.getElementById("result-yoon").classList.remove("hidden");
 
   const overall = ev.overall_feedback || {};
-  const areas   = ev.area_feedback   || {};
-
-  // 레벨 배지
+  const areas = ev.area_feedback || {};
   const badge = document.getElementById("overallLevelBadge");
   const level = overall.level || "";
   if (level) {
     badge.textContent = level;
     badge.className = "level-badge";
-    if (level === "Great Job")       badge.classList.add("level-great");
+    if (level === "Great Job") badge.classList.add("level-great");
     else if (level === "Keep Going") badge.classList.add("level-ok");
-    else                              badge.classList.add("level-good");
-    badge.classList.remove("hidden");
+    else badge.classList.add("level-good");
   } else {
     badge.className = "level-badge hidden";
+    badge.classList.add("hidden");
   }
 
-  // 1. 한 줄 진단
-  setEditableText("fb-one-line-diagnosis", ev.one_line_diagnosis || overall.summary || "");
+  setEditableText("fb-summary", overall.summary);
+  setEditableText("fb-strongest", overall.strongest_point || "");
+  setEditableText("fb-priority", overall.priority_improvement || "");
 
-  // 2. 코칭 우선순위
-  renderCoachingPriorities(ev.coaching_priorities || []);
-
-  // 3. 영상 확인 구간
-  renderVideoReviewPoints(ev.video_review_points || ev.timestamp_comments || []);
-
-  // 4. 수업 코칭 절차
-  renderCoachingProcedure(ev.coaching_procedure || []);
-
-  // 5. 선생님 코칭 멘트
-  renderCoachingScripts(ev.coaching_scripts || []);
-
-  // 6. 시간별 코칭안
-  const tc = ev.timed_coaching || {};
-  setEditableText("fb-timed-3",  tc.min3  || "");
-  setEditableText("fb-timed-5",  tc.min5  || "");
-  setEditableText("fb-timed-10", tc.min10 || "");
-
-  // 7. 재녹화 미션
-  setEditableText("fb-re-recording", ev.re_recording_mission || "");
-
-  // 8. 학부모 전달용 요약
-  setEditableText("fb-parent-summary", ev.parent_summary || ev.teacher_comment_suggestion || "");
-
-  // 9. 영역별 상세 피드백
-  setEditableText("fb-presentation-well",    areas.presentation_attitude?.well_done        || "");
-  setEditableText("fb-presentation-work",    areas.presentation_attitude?.needs_work       || "");
+  setEditableText("fb-presentation-well", areas.presentation_attitude?.well_done || "");
+  setEditableText("fb-presentation-work", areas.presentation_attitude?.needs_work || "");
   setEditableText("fb-presentation-mission", areas.presentation_attitude?.practice_mission || "");
 
-  setEditableText("fb-delivery-well",    areas.delivery_communication?.well_done        || "");
-  setEditableText("fb-delivery-work",    areas.delivery_communication?.needs_work       || "");
+  setEditableText("fb-delivery-well", areas.delivery_communication?.well_done || "");
+  setEditableText("fb-delivery-work", areas.delivery_communication?.needs_work || "");
   setEditableText("fb-delivery-mission", areas.delivery_communication?.practice_mission || "");
 
-  setEditableText("fb-content-well",    areas.content_organization?.well_done        || "");
-  setEditableText("fb-content-work",    areas.content_organization?.needs_work       || "");
+  setEditableText("fb-content-well", areas.content_organization?.well_done || "");
+  setEditableText("fb-content-work", areas.content_organization?.needs_work || "");
   setEditableText("fb-content-mission", areas.content_organization?.practice_mission || "");
 
+  setEditableText("fb-teacher-comment", ev.teacher_comment_suggestion || "");
   renderQualityNote(ev.video_quality_note);
+  renderTimestampComments(ev.timestamp_comments || []);
+  renderPracticePlan(ev.next_practice_plan || []);
   setFeedbackEditable(false);
+}
+
+function setEditableText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value || "";
+}
+
+function renderQualityNote(note) {
+  const el = document.getElementById("qualityNote");
+  if (!el) return;
+  if (note) {
+    el.textContent = note;
+    el.classList.remove("hidden");
+  } else {
+    el.classList.add("hidden");
+  }
+}
+
+function renderTimestampComments(items) {
+  const section = document.getElementById("timestampSection");
+  const list = document.getElementById("timestampList");
+  if (!section || !list) return;
+  list.innerHTML = "";
+  if (!items.length) {
+    section.classList.add("hidden");
+    return;
+  }
+  section.classList.remove("hidden");
+  items.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "timestamp-item";
+    row.innerHTML = `
+      <span class="timestamp-time">${escapeHtml(item.time || "-")}</span>
+      <span class="timestamp-comment ${item.type === "strength" ? "strength" : "improve"} editable-feedback" data-timestamp-index="${index}">${escapeHtml(item.comment || "")}</span>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function renderPracticePlan(items) {
+  const list = document.getElementById("practicePlanList");
+  if (!list) return;
+  list.innerHTML = "";
+  items.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "practice-item";
+    row.innerHTML = `
+      <div class="practice-step">${escapeHtml(String(item.step || index + 1))}</div>
+      <div>
+        <div class="practice-mission editable-feedback" data-plan-index="${index}" data-plan-field="mission">${escapeHtml(item.mission || "")}</div>
+        <div class="practice-how editable-feedback" data-plan-index="${index}" data-plan-field="how_to_practice">${escapeHtml(item.how_to_practice || "")}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
 }
 
 function setEditableText(id, value) {
@@ -1274,9 +1306,9 @@ function toggleFeedbackEdit() {
   setFeedbackEditable(feedbackEditMode);
 }
 
-async function copyParentSummary() {
-  const el  = document.getElementById("fb-parent-summary");
-  const btn = document.getElementById("copyParentSummaryBtn");
+async function copyTeacherComment() {
+  const el  = document.getElementById("fb-teacher-comment");
+  const btn = document.getElementById("copyTeacherCommentBtn");
   if (!el || !btn) return;
 
   const text = el.textContent.trim();
@@ -1331,46 +1363,22 @@ function setFeedbackEditable(on) {
 }
 
 function syncEditedFeedbackToState() {
-  // 1. data-field 속성 기반 정적 필드 동기화
   document.querySelectorAll("#result-yoon [data-field]").forEach((el) => {
-    setDeepValue(currentEval, el.dataset.field, el.textContent.trim());
+    setDeepValue(currentEval, el.dataset.field, stripLabel(el.textContent));
   });
-
-  // 2. 코칭 우선순위 동적 필드
-  document.querySelectorAll("[data-priority-index]").forEach((el) => {
-    const i     = Number(el.dataset.priorityIndex);
-    const field = el.dataset.priorityField;
-    if (currentEval.coaching_priorities?.[i] != null && field) {
-      currentEval.coaching_priorities[i][field] = el.textContent.trim();
+  document.querySelectorAll("#timestampList [data-timestamp-index]").forEach((el) => {
+    const index = Number(el.dataset.timestampIndex);
+    if (currentEval.timestamp_comments?.[index]) {
+      currentEval.timestamp_comments[index].comment = el.textContent.trim();
     }
   });
-
-  // 3. 영상 확인 구간 동적 필드
-  document.querySelectorAll("[data-review-index]").forEach((el) => {
-    const i     = Number(el.dataset.reviewIndex);
-    const field = el.dataset.reviewField;
-    if (currentEval.video_review_points?.[i] != null && field) {
-      currentEval.video_review_points[i][field] = el.textContent.trim();
+  document.querySelectorAll("#practicePlanList [data-plan-index]").forEach((el) => {
+    const index = Number(el.dataset.planIndex);
+    const field = el.dataset.planField;
+    if (currentEval.next_practice_plan?.[index] && field) {
+      currentEval.next_practice_plan[index][field] = el.textContent.trim();
     }
   });
-
-  // 4. 수업 코칭 절차
-  document.querySelectorAll("[data-procedure-index]").forEach((el) => {
-    const i = Number(el.dataset.procedureIndex);
-    if (Array.isArray(currentEval.coaching_procedure) && i < currentEval.coaching_procedure.length) {
-      currentEval.coaching_procedure[i] = el.textContent.trim();
-    }
-  });
-
-  // 5. 코칭 멘트
-  document.querySelectorAll("[data-script-index]").forEach((el) => {
-    const i     = Number(el.dataset.scriptIndex);
-    const field = el.dataset.scriptField;
-    if (currentEval.coaching_scripts?.[i] != null && field) {
-      currentEval.coaching_scripts[i][field] = el.textContent.trim();
-    }
-  });
-
   displayYoonResult(currentEval);
 }
 
@@ -1502,514 +1510,294 @@ async function setupKoreanPdfFont(pdf) {
 function renderFeedbackPdf(pdf, ev, name, cls, now, rubricType) {
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const M  = 15;
+  const M = 14;
   const cW = pageW - M * 2;
-  const BOT = pageH - 18;
-  const LH = 5.4;
+  const BOT = pageH - 17;
+  const LH = 5.2;
   let y = 0;
 
-  // ── 색상 팔레트 ─────────────────────────────────────────────
   const P = {
-    navy:     [27,  43,  94],
-    navyMid:  [42,  63, 128],
-    navyLight:[235, 238, 250],
-    amber:    [212, 147,  26],
-    amberBg:  [253, 243, 220],
-    surface:  [248, 248, 246],
-    white:    [255, 255, 255],
-    border:   [226, 226, 218],
-    text:     [30,  30,  50],
-    muted:    [110, 110, 140],
-    green:    [22,  101,  52],
-    greenBg:  [236, 253, 245],
-    blue:     [14,   72, 140],
-    blueBg:   [239, 246, 255],
-    orange:   [154,  52,  18],
-    orangeBg: [255, 247, 237],
-    divider:  [238, 238, 232],
+    navy: [27, 43, 94],
+    navyMid: [42, 63, 128],
+    amber: [232, 160, 32],
+    amberDark: [124, 58, 10],
+    surface: [247, 247, 244],
+    white: [255, 255, 255],
+    border: [229, 229, 220],
+    text: [26, 26, 46],
+    muted: [107, 107, 138],
+    green: [26, 82, 48],
+    greenBg: [235, 245, 238],
+    blue: [12, 64, 120],
+    blueBg: [235, 242, 251],
+    orange: [124, 58, 10],
+    orangeBg: [253, 240, 229],
+    shadow: [221, 221, 214],
   };
 
-  const FS = { xs: 7.5, sm: 8.5, base: 9.5, md: 11, lg: 14, xl: 19 };
-
-  const fg    = (...c) => pdf.setTextColor(...c);
-  const fill  = (...c) => pdf.setFillColor(...c);
-  const stroke= (...c) => pdf.setDrawColor(...c);
-  const lw    = (n)    => pdf.setLineWidth(n);
-  const fs    = (n)    => pdf.setFontSize(n);
+  const fg = (...c) => pdf.setTextColor(...c);
+  const fill = (...c) => pdf.setFillColor(...c);
+  const stroke = (...c) => pdf.setDrawColor(...c);
   const rrect = (x, yy, w, h, r, mode = "F") => pdf.roundedRect(x, yy, w, h, r, r, mode);
-
-  const mH = (text, maxW, fontSize = FS.base) => {
+  const line = (x1, yy, x2) => {
+    stroke(...P.border);
+    pdf.setLineWidth(0.25);
+    pdf.line(x1, yy, x2, yy);
+  };
+  const mH = (text, maxW, fs = 9.5) => {
     if (!text) return 0;
-    fs(fontSize);
+    pdf.setFontSize(fs);
     return pdf.splitTextToSize(String(text), maxW).length * LH;
   };
-
-  const wT = (text, tx, ty, maxW, fontSize = FS.base, color = P.text) => {
+  const wT = (text, tx, ty, maxW, fs = 9.5, color = P.text) => {
     if (!text) return 0;
     fg(...color);
-    fs(fontSize);
+    pdf.setFontSize(fs);
     const lines = pdf.splitTextToSize(String(text), maxW);
     lines.forEach((l, i) => pdf.text(l, tx, ty + i * LH));
     return lines.length * LH;
   };
-
-  const divider = (yy) => {
-    stroke(...P.divider); lw(0.3);
-    pdf.line(M, yy, pageW - M, yy);
-  };
-
   const footer = () => {
-    const pg = pdf.internal.getNumberOfPages();
-    divider(pageH - 12);
-    fg(...P.muted); fs(FS.xs);
-    pdf.text("Yoon's SpeakBack  교사용 코칭 가이드", M, pageH - 6.5);
-    pdf.text(`${pg}`, pageW - M, pageH - 6.5, { align: "right" });
+    const n = pdf.internal.getNumberOfPages();
+    line(M, pageH - 13, pageW - M);
+    fg(...P.muted); pdf.setFontSize(7.5);
+    pdf.text(`Yoon's SpeakBack | ${n}`, pageW / 2, pageH - 8, { align: "center" });
   };
-
-  const pageBg = () => {
+  const paintPageBg = () => {
     fill(...P.surface);
     pdf.rect(0, 0, pageW, pageH, "F");
   };
-
   const newPage = () => {
     footer();
     pdf.addPage();
-    pageBg();
-    y = 18;
+    paintPageBg();
+    y = 17;
   };
-
-  const need = (h) => { if (y + h > BOT) { newPage(); return true; } return false; };
-
-  const drawSectionTitle = (title, color = P.navy, keepNext = 0) => {
-    need(14 + keepNext);
+  const need = (h) => {
+    if (y + h > BOT) {
+      newPage();
+      return true;
+    }
+    return false;
+  };
+  const drawSectionTitle = (title, color = P.navy, keepWithNext = 0) => {
+    need(12 + keepWithNext);
     fill(...color);
-    rrect(M, y + 1.5, 4, 9, 2);
+    rrect(M, y + 1, 3.5, 8, 1.7);
     fg(...color);
-    fs(FS.md);
-    pdf.text(title, M + 8, y + 9);
-    y += 14;
+    pdf.setFontSize(11.2);
+    pdf.text(title, M + 7, y + 7.7);
+    y += 12;
   };
-
-  const drawCard = ({ title, label, text, bg = P.white, accent = P.navy, labelColor, fs: fontSize = FS.base }) => {
+  const drawCard = ({ title, text, bg = P.white, accent = P.navy, titleColor = accent, fs = 9.5 }) => {
     if (!text) return;
-    const PAD    = 7;
-    const innerW = cW - PAD * 2 - 2;
-    const labelH = label ? 7 : 0;
+    const pad = 6;
     const titleH = title ? 8 : 0;
-    const textH  = mH(text, innerW, fontSize);
-    const cardH  = textH + labelH + titleH + PAD * 2;
-    need(cardH + 4);
-
-    fill(...bg); stroke(...P.border); lw(0.3);
-    rrect(M, y, cW, cardH, 3, "DF");
+    const h = mH(text, cW - pad * 2 - 3, fs) + titleH + pad * 2;
+    need(h);
+    fill(...P.shadow);
+    rrect(M + 0.6, y + 0.8, cW, h, 3.2);
+    fill(...bg);
+    stroke(...P.border);
+    pdf.setLineWidth(0.25);
+    rrect(M, y, cW, h, 3.2, "DF");
     fill(...accent);
-    rrect(M, y, 3.5, cardH, 2);
-
-    let ty = y + PAD;
-    if (label) {
-      fill(...(labelColor || accent));
-      rrect(M + PAD, ty, getLabelWidth(pdf, label, FS.xs), 6, 3);
-      fg(...P.white); fs(FS.xs);
-      pdf.text(label, M + PAD + getLabelWidth(pdf, label, FS.xs) / 2, ty + 4.3, { align: "center" });
-      ty += labelH + 1;
-    }
+    rrect(M, y, 3, h, 1.6);
     if (title) {
-      fg(...accent); fs(FS.sm);
-      pdf.text(title, M + PAD, ty + 6);
-      ty += titleH;
+      fg(...titleColor);
+      pdf.setFontSize(8.5);
+      pdf.text(title, M + pad, y + 7);
     }
-    wT(text, M + PAD + 1, ty + 3, innerW, fontSize);
-    y += cardH + 5;
+    wT(text, M + pad, y + pad + titleH + 3, cW - pad * 2 - 3, fs, P.text);
+    y += h + 5;
+  };
+  const drawPill = (text, x, yy, w, bg, color = P.white) => {
+    fill(...bg);
+    rrect(x, yy, w, 8.5, 4.2);
+    fg(...color);
+    pdf.setFontSize(8);
+    pdf.text(text, x + w / 2, yy + 5.8, { align: "center" });
   };
 
-  const drawBadge = (text, x, yy, bg, color = P.white) => {
-    fs(FS.xs);
-    const tw = pdf.getTextWidth(text);
-    const pw = tw + 12;
-    const ph = 8;
-    fill(...bg); rrect(x, yy, pw, ph, 4);
-    fg(...color); fs(FS.xs);
-    pdf.text(text, x + pw / 2, yy + 5.5, { align: "center" });
-    return pw;
-  };
-
-  function getLabelWidth(p, text, fontSize) {
-    p.setFontSize(fontSize);
-    return p.getTextWidth(text) + 10;
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  1. 헤더
-  // ════════════════════════════════════════════════════════════
-  pageBg();
+  paintPageBg();
 
   fill(...P.navy);
-  pdf.rect(0, 0, pageW, 44, "F");
+  pdf.rect(0, 0, pageW, 42, "F");
   fill(...P.amber);
-  pdf.rect(0, 41, pageW, 3, "F");
+  pdf.rect(0, 38.5, pageW, 3.5, "F");
+  fg(...P.white);
+  pdf.setFontSize(18);
+  pdf.text("Yoon's SpeakBack", M, 14);
+  fg(...P.amber);
+  pdf.setFontSize(18);
+  pdf.text(" AI Feedback", M + 55, 14);
+  fg(225, 229, 245);
+  pdf.setFontSize(9);
+  pdf.text("발표 연습 개선용 코칭 리포트", M, 23);
+  fg(...P.white);
+  pdf.setFontSize(12.5);
+  pdf.text(`${name || "학생"}${cls ? ` | ${cls}` : ""}`, M, 34);
+  const dateStr = now.toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  fg(225, 229, 245);
+  pdf.setFontSize(8.5);
+  pdf.text(dateStr, pageW - M, 34, { align: "right" });
 
-  fg(...P.white); fs(FS.xl);
-  pdf.text("Yoon's SpeakBack", M, 15);
-  fg(210, 218, 240); fs(FS.sm);
-  pdf.text("교사용 코칭 가이드", M, 24);
-
-  const dateStr = now.toLocaleString("ko-KR", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit",
-  });
-  fg(210, 218, 240); fs(FS.xs);
-  pdf.text(dateStr, pageW - M, 16, { align: "right" });
-
-  const displayName = `${name || "학생"}${cls ? "  |  " + cls : ""}`;
-  fg(...P.white); fs(FS.md);
-  pdf.text(displayName, pageW - M, 27, { align: "right" });
-
-  y = 52;
+  y = 50;
   footer();
 
-  // ════════════════════════════════════════════════════════════
-  //  2. 레벨 배지 + 코칭 진단
-  // ════════════════════════════════════════════════════════════
   const overall = ev.overall_feedback || {};
-
   if (overall.level) {
-    const lvlMap = { "Great Job": P.green, "Good Work": P.blue, "Keep Going": P.orange };
-    const lvlBg  = lvlMap[overall.level] || P.navy;
-    drawBadge(overall.level, M, y, lvlBg);
-    y += 13;
+    const lvlC = { "Great Job": P.green, "Good Work": P.blue, "Keep Going": P.orange };
+    drawPill(overall.level, M, y, 36, lvlC[overall.level] || P.navy);
+    y += 14;
   }
 
-  // one_line_diagnosis (신규) 또는 overall.summary (구 데이터 하위호환)
-  const oneLiner = ev.one_line_diagnosis || overall.summary || "";
   drawCard({
-    label: "오늘의 코칭 진단",
-    text:  oneLiner,
-    bg:    P.white,
+    title: "종합 평가",
+    text: overall.summary,
+    bg: P.white,
     accent: P.navy,
-    labelColor: P.navy,
-    fs:    FS.base,
+    titleColor: P.navy,
+    fs: 10,
   });
 
-  // overall.summary는 웹 UI에서만 표시 (PDF에서는 오늘의 코칭 진단으로 통합)
+  const strongest = overall.strongest_point || "";
+  const priority = overall.priority_improvement || "";
+  if (strongest || priority) {
+    const gap = 5;
+    const colW = (cW - gap) / 2;
+    const pad = 5;
+    const innerW = colW - pad * 2;
+    const sH = strongest ? mH(strongest, innerW, 9.4) + 19 : 0;
+    const pH = priority ? mH(priority, innerW, 9.4) + 19 : 0;
+    const rowH = Math.max(sH, pH, 28);
+    need(rowH + 2);
 
-  // ════════════════════════════════════════════════════════════
-  //  3. 코칭 우선순위
-  // ════════════════════════════════════════════════════════════
-  const priorities = ev.coaching_priorities || [];
-  if (priorities.length) {
-    drawSectionTitle("코칭 우선순위", P.navy);
-    for (const item of priorities) {
-      const urgencyColor = item.urgency === "높음" ? P.orange
-                         : item.urgency === "낮음" ? P.green : P.blue;
-      const urgencyBg    = item.urgency === "높음" ? P.orangeBg
-                         : item.urgency === "낮음" ? P.greenBg : P.blueBg;
-      const label = `${item.urgency || ""} · 우선순위 ${item.rank || ""}`;
-      const bodyParts = [
-        item.reason   ? `근거: ${item.reason}` : null,
-        item.handling ? `수업 액션: ${item.handling}` : null,
-      ].filter(Boolean);
-      drawCard({
-        label,
-        title: item.focus || "",
-        text:  bodyParts.join("\n\n"),
-        bg:    urgencyBg,
-        accent: urgencyColor,
-        labelColor: urgencyColor,
-        fs:    FS.sm,
-      });
-    }
-  } else {
-    // 구 데이터 하위호환: strongest_point / priority_improvement
-    const strongest = overall.strongest_point || "";
-    const priority  = overall.priority_improvement || "";
-    if (strongest || priority) {
-      const GAP  = 6;
-      const colW = (cW - GAP) / 2;
-      const PAD  = 6;
-      const inW  = colW - PAD * 2;
-      const sH   = strongest ? mH(strongest, inW, FS.base) + PAD * 2 + 17 : 0;
-      const pH   = priority  ? mH(priority,  inW, FS.base) + PAD * 2 + 17 : 0;
-      const rowH = Math.max(sH, pH, 30);
-      need(rowH + 4);
-
-      const drawMiniCard = (x, lbl, text, bg, color) => {
-        fill(...bg); stroke(...P.border); lw(0.3);
-        rrect(x, y, colW, rowH, 3, "DF");
-        fill(...color); rrect(x + PAD, y + PAD, getLabelWidth(pdf, lbl, FS.xs), 6.5, 3.2);
-        fg(...P.white); fs(FS.xs);
-        pdf.text(lbl, x + PAD + getLabelWidth(pdf, lbl, FS.xs) / 2, y + PAD + 4.6, { align: "center" });
-        wT(text, x + PAD, y + PAD + 12, inW, FS.base, P.text);
-      };
-
-      if (strongest) drawMiniCard(M,             "가장 누렷한 강점", strongest, P.greenBg,  P.green);
-      if (priority)  drawMiniCard(M + colW + GAP, "우선 개선 포인트", priority,  P.orangeBg, P.orange);
-      y += rowH + 7;
-    }
+    const drawMini = (x, title, text, bg, color) => {
+      fill(...bg);
+      stroke(...P.border);
+      pdf.setLineWidth(0.25);
+      rrect(x, y, colW, rowH, 3, "DF");
+      fill(...color);
+      rrect(x + pad, y + 5, 22, 7, 3.5);
+      fg(...P.white);
+      pdf.setFontSize(7.5);
+      pdf.text(title, x + pad + 11, y + 9.9, { align: "center" });
+      wT(text, x + pad, y + 18, innerW, 9.4, P.text);
+    };
+    if (strongest) drawMini(M, "강점", strongest, P.greenBg, P.green);
+    if (priority)  drawMini(M + colW + gap, "개선", priority, P.orangeBg, P.orange);
+    y += rowH + 6;
   }
 
-  // ════════════════════════════════════════════════════════════
-  //  4. 영상 확인 구간
-  // ════════════════════════════════════════════════════════════
-  const reviews    = ev.video_review_points || [];
-  const timestamps = (ev.timestamp_comments || []).filter(t => t && t.time && t.comment);
-  const reviewItems = reviews.length ? reviews : timestamps;
+  const tss = (Array.isArray(ev.timestamp_comments) ? ev.timestamp_comments : [])
+    .filter((t) => t && t.time && t.comment);
+  if (tss.length) {
+    const timestampHeight = (ts) => Math.max(14, mH(ts.comment, cW - 34, 9.3) + 8);
+    drawSectionTitle("타임스탬프 코멘트", P.navy, timestampHeight(tss[0]) + 3);
 
-  if (reviewItems.length) {
-    drawSectionTitle("영상 확인 구간", P.navy);
-
-    if (reviews.length) {
-      // 신규 형식
-      for (const item of reviews) {
-        const isStr  = item.type === "strength";
-        const tColor = isStr ? P.green  : P.orange;
-        const tBg    = isStr ? P.greenBg : P.orangeBg;
-        const parts  = [
-          item.observation || "",
-          item.teacher_action  ? "교사 액션: " + item.teacher_action : null,
-        ].filter(Boolean);
-        drawCard({
-          label: (isStr ? "강점" : "개선") + " · " + (item.time || ""),
-          text:  parts.join("\n\n"),
-          bg:    tBg,
-          accent: tColor,
-          labelColor: tColor,
-          fs:    FS.sm,
-        });
-      }
-    } else {
-      // 구 형식 timestamp_comments
-      for (const ts of timestamps) {
-        const isStr   = ts.type === "strength";
-        const tColor  = isStr ? P.green  : P.orange;
-        const tBg     = isStr ? P.greenBg : P.orangeBg;
-        const tagLabel = isStr ? "강점" : "개선";
-        const BADGE_H = 7; const PAD_V = 7;
-        const tagW   = getLabelWidth(pdf, tagLabel, FS.xs);
-        const timeW  = getLabelWidth(pdf, ts.time,  FS.xs);
-        const badgesW  = 5 + tagW + 4 + timeW + 8;
-        const commentW = cW - badgesW - 4;
-        const commentH = mH(ts.comment, commentW, FS.base);
-        const rowH = Math.max(BADGE_H + PAD_V * 2, commentH + PAD_V * 2, 20);
-        need(rowH + 3);
-
-        fill(...P.white); stroke(...P.border); lw(0.3);
-        rrect(M, y, cW, rowH, 3, "DF");
-        fill(...tColor); rrect(M, y, 3.5, rowH, 2);
-
-        const badgeY = y + (rowH - BADGE_H) / 2;
-        fill(...tColor); rrect(M + 5, badgeY, tagW, BADGE_H, 3.5);
-        fg(...P.white); fs(FS.xs);
-        pdf.text(tagLabel, M + 5 + tagW / 2, badgeY + 5, { align: "center" });
-
-        const timeX = M + 5 + tagW + 4;
-        fill(...tBg); rrect(timeX, badgeY, timeW, BADGE_H, 3.5);
-        fg(...tColor); fs(FS.xs);
-        pdf.text(ts.time, timeX + timeW / 2, badgeY + 5, { align: "center" });
-
-        const textY = y + (rowH - commentH) / 2 + 3;
-        wT(ts.comment, M + badgesW, textY, commentW, FS.base);
-        y += rowH + 3;
-      }
-    }
-    y += 4;
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  5. 수업 코칭 절차
-  // ════════════════════════════════════════════════════════════
-  const procedure = ev.coaching_procedure || [];
-  if (procedure.length) {
-    drawSectionTitle("수업 코칭 절차", P.navyMid);
-    for (let si = 0; si < procedure.length; si++) {
-      const step  = String(procedure[si] || "");
-      const PAD   = 7;
-      const textX = M + 22;
-      const inW   = cW - 22 - PAD;
-      const stepH = mH(step, inW, FS.base);
-      const rowH  = Math.max(20, stepH + PAD * 2);
-      need(rowH + 3);
-
-      fill(...P.white); stroke(...P.border); lw(0.3);
-      rrect(M, y, cW, rowH, 3, "DF");
-      fill(...P.navyMid);
-      pdf.circle(M + 11, y + rowH / 2, 5.5, "F");
-      fg(...P.white); fs(FS.sm);
-      pdf.text(String(si + 1), M + 11, y + rowH / 2 + 3.2, { align: "center" });
-      wT(step, textX, y + PAD + 3, inW, FS.base, P.text);
-      y += rowH + 4;
+    for (const ts of tss) {
+      const isStrength = ts.type === "strength";
+      const color = isStrength ? P.green : P.orange;
+      const bg    = isStrength ? P.greenBg : P.orangeBg;
+      const tag   = isStrength ? "강점" : "개선";
+      const bh    = timestampHeight(ts);
+      need(bh + 2);
+      fill(...P.white);
+      stroke(...P.border);
+      pdf.setLineWidth(0.25);
+      rrect(M, y, cW, bh, 2.5, "DF");
+      drawPill(tag, M + 5, y + 4, 17, color);
+      fill(...bg);
+      rrect(M + 26, y + 4, 17, 7.5, 3.8);
+      fg(...color);
+      pdf.setFontSize(7.5);
+      pdf.text(ts.time, M + 34.5, y + 9.1, { align: "center" });
+      wT(ts.comment, M + 48, y + 8.4, cW - 54, 9.3, P.text);
+      y += bh + 3;
     }
     y += 3;
   }
 
-  // ════════════════════════════════════════════════════════════
-  //  6. 선생님 코칭 멘트
-  // ════════════════════════════════════════════════════════════
-  const scripts = ev.coaching_scripts || [];
-  if (scripts.length) {
-    drawSectionTitle("선생님 코칭 멘트", P.navy);
-    for (const item of scripts) {
-      drawCard({
-        label: item.situation || "",
-        text:  item.script    || "",
-        bg:    P.navyLight,
-        accent: P.navyMid,
-        labelColor: P.navyMid,
-        fs:    FS.base,
-      });
-    }
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  7. 시간별 코칭안 (3분 / 5분 / 10분)
-  // ════════════════════════════════════════════════════════════
-  const tc = ev.timed_coaching || {};
-  if (tc.min3 || tc.min5 || tc.min10) {
-    drawSectionTitle("시간별 코칭안", P.navy);
-    const GAP    = 5;
-    const colW   = (cW - GAP * 2) / 3;
-    const PAD    = 7;
-    const inW    = colW - PAD * 2;
-    const lblH   = 7;
-    const cols   = [
-      { label: "3분",  text: tc.min3  || "", color: P.green,  bg: P.greenBg  },
-      { label: "5분",  text: tc.min5  || "", color: P.blue,   bg: P.blueBg   },
-      { label: "10분", text: tc.min10 || "", color: P.orange, bg: P.orangeBg },
-    ];
-    const maxTH = Math.max(...cols.map(c => mH(c.text, inW, FS.sm)), 16);
-    const rowH  = lblH + 4 + maxTH + PAD * 2;
-    need(rowH + 4);
-
-    cols.forEach((col, ci) => {
-      const cx  = M + ci * (colW + GAP);
-      fill(...col.bg); stroke(...P.border); lw(0.3);
-      rrect(cx, y, colW, rowH, 3, "DF");
-      const lblW = getLabelWidth(pdf, col.label, FS.xs);
-      fill(...col.color);
-      rrect(cx + PAD, y + PAD, lblW, lblH, 3.5);
-      fg(...P.white); fs(FS.xs);
-      pdf.text(col.label, cx + PAD + lblW / 2, y + PAD + 5, { align: "center" });
-      wT(col.text, cx + PAD, y + PAD + lblH + 4, inW, FS.sm, P.text);
-    });
-    y += rowH + 7;
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  8. 재녹화 미션
-  // ════════════════════════════════════════════════════════════
-  if (ev.re_recording_mission) {
-    drawCard({
-      label: "재녹화 미션",
-      text:  ev.re_recording_mission,
-      bg:    P.navyLight,
-      accent: P.navyMid,
-      labelColor: P.navyMid,
-      fs:    FS.base,
-    });
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  9. 학부모 전달용 요약
-  // ════════════════════════════════════════════════════════════
-  const parentSummary = ev.parent_summary || ev.teacher_comment_suggestion || "";
-  if (parentSummary) {
-    drawCard({
-      label: "학부모 전달용 요약",
-      text:  parentSummary,
-      bg:    P.amberBg,
-      accent: P.amber,
-      labelColor: P.orange,
-      fs:    FS.base,
-    });
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  10. 영역별 피드백 (발표 태도 / 전달력 / 내용 구성)
-  // ════════════════════════════════════════════════════════════
   const areas = ev.area_feedback || {};
   const areaDefs = [
-    { key: "presentation_attitude", label: "발표 태도", color: P.green,  light: P.greenBg  },
-    { key: "delivery_communication",label: "전달력",        color: P.blue,   light: P.blueBg   },
-    { key: "content_organization",  label: "내용 구성", color: P.orange, light: P.orangeBg },
+    { key: "presentation_attitude", label: "발표 태도",  color: P.green,  light: P.greenBg },
+    { key: "delivery_communication", label: "전달력",    color: P.blue,   light: P.blueBg  },
+    { key: "content_organization",   label: "내용 구성", color: P.orange, light: P.orangeBg },
   ];
 
   for (const def of areaDefs) {
     const area = areas[def.key];
     if (!area) continue;
-    const subItems = [
-      { label: "잘한 점",   text: area.well_done,       color: P.green,  bg: P.greenBg  },
-      { label: "보완할 점", text: area.needs_work,  color: P.orange, bg: P.orangeBg },
-      { label: "연습 미션", text: area.practice_mission, color: def.color, bg: def.light },
-    ].filter(i => i.text);
-    if (!subItems.length) continue;
+    const pad    = 6;
+    const innerW = cW - pad * 2 - 4;
+    const items  = [
+      { label: "잘한 점",   text: area.well_done,        color: P.green,    bg: P.greenBg  },
+      { label: "보완할 점", text: area.needs_work,        color: P.orange,   bg: P.orangeBg },
+      { label: "연습 미션", text: area.practice_mission,  color: def.color,  bg: def.light  },
+    ].filter((item) => item.text).map((item) => ({
+      ...item,
+      height: Math.max(22, mH(item.text, innerW, 9.4) + 18),
+    }));
+    if (!items.length) continue;
 
-    const PAD    = 7;
-    const inW    = cW - PAD * 2 - 2;
-    const PILL_H  = 7;
-    const PILL_MB = 5;
-    drawSectionTitle(def.label, def.color);
-
-    for (const item of subItems) {
-      const labelW = getLabelWidth(pdf, item.label, FS.xs);
-      const textH  = mH(item.text, inW, FS.base);
-      const rowH   = PAD + PILL_H + PILL_MB + textH + PAD;
-      need(rowH + 3);
-
-      fill(...P.white); stroke(...P.border); lw(0.3);
-      rrect(M, y, cW, rowH, 3, "DF");
-      fill(...item.color); rrect(M, y, 3.5, rowH, 2);
-
-      fill(...item.bg); rrect(M + PAD, y + PAD, labelW, PILL_H, 3.5);
-      fg(...item.color); fs(FS.xs);
-      pdf.text(item.label, M + PAD + labelW / 2, y + PAD + 5.2, { align: "center" });
-      wT(item.text, M + PAD + 1, y + PAD + PILL_H + PILL_MB + 3, inW, FS.base);
-      y += rowH + 4;
+    drawSectionTitle(def.label, def.color, items[0].height + 4);
+    for (const item of items) {
+      const h = item.height;
+      need(h);
+      fill(...P.white);
+      stroke(...P.border);
+      pdf.setLineWidth(0.25);
+      rrect(M, y, cW, h, 3, "DF");
+      fill(...item.bg);
+      rrect(M + pad, y + 5, 26, 8, 4);
+      fg(...item.color);
+      pdf.setFontSize(8);
+      pdf.text(item.label, M + pad + 13, y + 10.4, { align: "center" });
+      wT(item.text, M + pad + 4, y + 19, innerW, 9.4, P.text);
+      y += h + 4;
     }
-    y += 3;
+    y += 1;
   }
 
-  // ════════════════════════════════════════════════════════════
-  //  11. 구 데이터 연습 계획 (하위호환)
-  // ════════════════════════════════════════════════════════════
   const plan = Array.isArray(ev.next_practice_plan) ? ev.next_practice_plan : [];
   if (plan.length) {
-    drawSectionTitle("다음 연습 계획", P.navyMid);
-    for (const item of plan) {
+    const planItems = plan.map((item) => {
       const mission = item.mission || "";
       const how     = item.how_to_practice || "";
-      const PAD     = 7;
-      const textX   = M + 22;
-      const inW     = cW - 22 - PAD;
-      const msnH    = mH(mission, inW, FS.base);
-      const howH    = mH(how, inW, FS.sm);
-      const rowH    = Math.max(22, msnH + howH + 6) + PAD * 2;
-      need(rowH + 3);
-
-      fill(...P.white); stroke(...P.border); lw(0.3);
-      rrect(M, y, cW, rowH, 3, "DF");
-      fill(...P.navy);
-      pdf.circle(M + 11, y + rowH / 2, 5.5, "F");
-      fg(...P.white); fs(FS.sm);
-      pdf.text(String(item.step || ""), M + 11, y + rowH / 2 + 3.2, { align: "center" });
-      wT(mission, textX, y + PAD + 3, inW, FS.base, P.text);
-      if (how) wT(how, textX, y + PAD + 3 + msnH + 2, inW, FS.sm, P.muted);
-      y += rowH + 4;
-    }
-    y += 3;
-  }
-
-  // ════════════════════════════════════════════════════════════
-  //  12. 영상·음성 품질 참고 (있을 때만)
-  // ════════════════════════════════════════════════════════════
-  if (ev.video_quality_note) {
-    drawCard({
-      label: "영상음성 품질 참고",
-      text:  ev.video_quality_note,
-      bg:    P.amberBg,
-      accent: P.amber,
-      labelColor: P.orange,
-      fs:    FS.sm,
+      const msnH    = mH(mission, cW - 28, 10);
+      const howH    = mH(how, cW - 28, 9.1);
+      return { ...item, mission, how, missionHeight: msnH, height: Math.max(22, msnH + howH + 13) };
     });
+    drawSectionTitle("다음 연습 계획", P.navyMid, planItems[0].height + 4);
+
+    for (const item of planItems) {
+      const stepH = item.height;
+      need(stepH);
+      fill(...P.white);
+      stroke(...P.border);
+      pdf.setLineWidth(0.25);
+      rrect(M, y, cW, stepH, 3, "DF");
+      fill(...P.navy);
+      pdf.circle(M + 10, y + 10, 5, "F");
+      fg(...P.white);
+      pdf.setFontSize(9);
+      pdf.text(String(item.step || ""), M + 10, y + 12.5, { align: "center" });
+      wT(item.mission, M + 22, y + 8,                         cW - 28, 10,  P.text);
+      wT(item.how,     M + 22, y + 8 + item.missionHeight + 4, cW - 28, 9.1, P.muted);
+      y += stepH + 4;
+    }
+    y += 2;
   }
+
+  drawCard({
+    title: "영상/음성 품질 참고",
+    text:  ev.video_quality_note,
+    bg:    P.orangeBg,
+    accent: P.amber,
+    titleColor: P.orange,
+    fs:    9.3,
+  });
 
   footer();
 }
