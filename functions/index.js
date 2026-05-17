@@ -77,9 +77,9 @@ Do not output numeric scores.
 Do not compare the student with other students.
 Do not include disclaimer sentences about contests, judging, scoring, awards, pass/fail, or prediction.
 Do not use Korean phrases such as "대회 점수", "심사 점수", "대회 결과", "무관합니다", "예측하지 않습니다", or "공식 평가".
-IMPORTANT: overall_feedback.summary and teacher_comment_suggestion must be clearly different.
-- summary: analytical, third-person, for the teacher's internal use.
-- teacher_comment_suggestion: warm, first-person coaching voice, addressed to the student, ready to send.
+IMPORTANT: overall_feedback.summary and teacher_comment_suggestion serve completely different purposes and must NOT overlap in content.
+- summary: analytical memo for the teacher — third-person, covers all three areas, internal use only. Never addressed to the student.
+- teacher_comment_suggestion: a short personal message the teacher sends directly to the student — pick ONE specific moment from the video to praise, add ONE next challenge. Do not summarize. Do not restate what summary already said.
 ${studentLevel === "elementary_low" ? "IMPORTANT: Do not use emoji in any output field." : ""}
 
 Return ONLY valid JSON - no markdown fences, no extra text:
@@ -87,7 +87,7 @@ Return ONLY valid JSON - no markdown fences, no extra text:
   "video_quality_note": "<영상 또는 음성 품질 이슈가 있으면 한국어로 작성. 없으면 null>",
   "overall_feedback": {
     "level": "Great Job | Good Work | Keep Going",
-    "summary": "<3-4 Korean sentences for the teacher's internal review. Objectively describe the student's overall presentation performance across all three areas (attitude, delivery, content). Be specific and analytical — avoid vague praise. This is NOT a message to the student or parent.>",
+    "summary": "<3-4 Korean sentences. Teacher's internal analytical note — third-person, objective, covering all three areas (attitude, delivery, content). Example tone: '전반적인 발표 자신감은 양호하나 내용 전개에서 구체적 예시가 부족했다.' This is NOT a message to the student. Do not repeat this content in teacher_comment_suggestion.>",
     "strongest_point": "<One specific strength in Korean>",
     "priority_improvement": "<One most important improvement point in Korean>"
   },
@@ -116,7 +116,7 @@ Return ONLY valid JSON - no markdown fences, no extra text:
     { "step": 2, "mission": "<Second short practice task in Korean>", "how_to_practice": "<Specific instruction in Korean>" },
     { "step": 3, "mission": "<Third short practice task in Korean>", "how_to_practice": "<Specific instruction in Korean>" }
   ],
-  "teacher_comment_suggestion": "<2-3 Korean sentences written AS the teacher speaking directly to the student (use '~했어요', '~해보세요' tone). This should be warm, encouraging, and ready to send to the student or parent as-is. It must feel DIFFERENT from the summary — focus on one key praise and one actionable next step, written in a personal coaching voice. Do NOT repeat the summary.>"
+  "teacher_comment_suggestion": "<Exactly 2 Korean sentences spoken directly TO the student as the teacher. Sentence 1: one specific praise about what the student did well TODAY (mention a concrete detail from the video). Sentence 2: one clear, kind next-step challenge. Use '~했어요', '~해봐요' tone. Example: '오늘 발표에서 시선을 잘 유지해줬어요, 정말 자신감 있어 보였어요. 다음엔 문장 끝을 또렷하게 마무리하는 연습을 해봐요.' Do NOT summarize overall performance — pick ONE moment or skill only.>"
 }
 `;
 }
