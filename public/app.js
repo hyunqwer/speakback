@@ -93,7 +93,7 @@ function bindPageActions() {
     btn.addEventListener("click", () => setStudentLevel(btn.dataset.level));
   });
   // 학부모 요약 복사 버튼
-  document.getElementById("copyTeacherCommentBtn")?.addEventListener("click", copyTeacherComment);
+  document.getElementById("copySummaryBtn")?.addEventListener("click", copySummary);
 }
 
 // ── 사용 방법 가이드 모달 ──────────────────────────────────
@@ -1118,7 +1118,6 @@ function displayYoonResult(ev) {
   setEditableText("fb-content-work", areas.content_organization?.needs_work || "");
   setEditableText("fb-content-mission", areas.content_organization?.practice_mission || "");
 
-  setEditableText("fb-teacher-comment", ev.teacher_comment_suggestion || "");
   renderQualityNote(ev.video_quality_note);
   renderTimestampComments(ev.timestamp_comments || []);
   renderPracticePlan(ev.next_practice_plan || []);
@@ -1290,9 +1289,9 @@ function toggleFeedbackEdit() {
   setFeedbackEditable(feedbackEditMode);
 }
 
-async function copyTeacherComment() {
-  const el  = document.getElementById("fb-teacher-comment");
-  const btn = document.getElementById("copyTeacherCommentBtn");
+async function copySummary() {
+  const el  = document.getElementById("fb-summary");
+  const btn = document.getElementById("copySummaryBtn");
   if (!el || !btn) return;
 
   const text = el.textContent.trim();
@@ -1373,7 +1372,6 @@ function stripLabel(text) {
     .replace(/^잘한 점:\s*/, "")
     .replace(/^보완할 점:\s*/, "")
     .replace(/^다음 연습 미션:\s*/, "")
-    .replace(/^교사용 코멘트 예시:\s*/, "")
     .trim();
 }
 

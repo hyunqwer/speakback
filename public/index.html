@@ -189,9 +189,12 @@
           <div id="qualityNote" class="quality-note hidden"></div>
 
           <div class="fb-block">
-            <div class="fb-lbl">종합 평가 <span class="tag tag-ai">AI</span></div>
+            <div class="fb-title-row">
+              <span class="fb-lbl">종합 평가 <span class="tag tag-ai">AI</span></span>
+              <button class="copy-btn" id="copySummaryBtn" type="button" aria-label="종합 평가 복사">복사</button>
+            </div>
             <div id="fb-summary" class="fb-text fb-gen editable-feedback" data-field="overall_feedback.summary"></div>
-            <p class="edit-hint">✏️ 편집 버튼으로 내용을 수정하거나 코멘트를 추가할 수 있어요.</p>
+            <p class="edit-hint">✏️ 편집 후 복사 버튼으로 학생/학부모에게 바로 전달하세요.</p>
           </div>
           <div class="grid2">
             <div class="fb-block">
@@ -262,14 +265,6 @@
             <div id="practicePlanList" class="practice-plan-list"></div>
           </div>
 
-          <div class="card inner-card">
-            <div class="fb-title-row">
-              <span class="fb-title">교사 코멘트 예시 <span class="tag tag-ai">AI</span></span>
-              <button class="copy-btn" id="copyTeacherCommentBtn" type="button" aria-label="교사 코멘트 복사">복사</button>
-            </div>
-            <div id="fb-teacher-comment" class="fb-text fb-gen editable-feedback" data-field="teacher_comment_suggestion"></div>
-            <p class="edit-hint">✏️ 편집 버튼으로 수정 후 학생/학부모에게 전달하세요.</p>
-          </div>
         </div>
 
         <div class="save-notice hidden" id="saveNotice"></div>
