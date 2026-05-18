@@ -639,14 +639,49 @@ window.validateYoutubeUrl = () => {
   const input = document.getElementById("youtubeUrl");
   if (!input) return false;
   const val = input.value.trim();
-  const videoId = getYoutubeVideoId(val);
-  const valid = Boolean(videoId);
-  input.style.borderColor = val
-    ? valid ? "var(--accent)" : "var(--danger)"
-    : "";
-  renderYoutubePreview(videoId);
-  return valid;
+  const type = detectVideoUrlType(val);
+
+  if (type === "youtube") {
+    const videoId = getYoutubeVideoId(val);
+    input.style.borderColor = val ? "var(--accent)" : "";
+    renderYoutubePreview(videoId);
+    renderInstagramPreview(null);
+    return true;
+  } else if (type === "instagram") {
+    input.style.borderColor = val ? "var(--accent)" : "";
+    renderYoutubePreview(null);
+    renderInstagramPreview(val);
+    return true;
+  } else {
+    input.style.borderColor = val ? "var(--danger)" : "";
+    renderYoutubePreview(null);
+    renderInstagramPreview(null);
+    return false;
+  }
 };
+
+function detectVideoUrlType(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    if (["youtube.com", "youtu.be", "youtube-nocookie.com"].includes(host)) return "youtube";
+    if (host === "instagram.com") return "instagram";
+  } catch (e) {}
+  return null;
+}
+
+function renderInstagramPreview(url) {
+  const wrap = document.getElementById("instagramPreviewWrap");
+  const display = document.getElementById("instagramUrlDisplay");
+  if (!wrap) return;
+  if (!url) {
+    wrap.classList.add("hidden");
+    return;
+  }
+  if (display) display.textContent = url;
+  wrap.classList.remove("hidden");
+}
 
 function getNormalizedYoutubeUrl(url) {
   const videoId = getYoutubeVideoId(url);
@@ -743,20 +778,27 @@ window.handleSubmit = async () => {
       return;
     }
   } else {
-    const youtubeUrl = document.getElementById("youtubeUrl").value.trim();
-    const normalizedYoutubeUrl = getNormalizedYoutubeUrl(youtubeUrl);
-    if (!youtubeUrl) {
-      alert("YouTube URL을 입력해 주세요.");
+    const rawUrl = document.getElementById("youtubeUrl").value.trim();
+    const urlType = detectVideoUrlType(rawUrl);
+
+    if (!rawUrl) {
+      alert("YouTube 또는 Instagram URL을 입력해 주세요.");
       document.getElementById("youtubeUrl").focus();
       return;
     }
-    if (!normalizedYoutubeUrl) {
+    if (!urlType) {
       window.validateYoutubeUrl();
-      alert("올바른 YouTube URL을 입력해 주세요.");
+      alert("올바른 YouTube 또는 Instagram Reel URL을 입력해 주세요.");
       document.getElementById("youtubeUrl").focus();
       return;
     }
-    payload = { youtubeUrl: normalizedYoutubeUrl, studentName, studentClass, studentLevel, rubricType };
+
+    if (urlType === "youtube") {
+      const normalizedYoutubeUrl = getNormalizedYoutubeUrl(rawUrl);
+      payload = { youtubeUrl: normalizedYoutubeUrl, studentName, studentClass, studentLevel, rubricType };
+    } else if (urlType === "instagram") {
+      payload = { instagramUrl: rawUrl, studentName, studentClass, studentLevel, rubricType };
+    }
     setLoading(true);
   }
 
@@ -787,8 +829,9 @@ async function runEvaluation(payload, meta) {
       studentLevel: meta.studentLevel,
       rubricType: data.rubricType || meta.rubricType,
       evaluation: data.evaluation,
-      videoSource: payload.youtubeUrl ? "youtube" : "file",
+      videoSource: payload.youtubeUrl ? "youtube" : payload.instagramUrl ? "instagram" : "file",
       youtubeUrl: payload.youtubeUrl || null,
+      instagramUrl: payload.instagramUrl || null,
       storagePath: payload.storagePath || null,
     });
     retryPayload = null;
@@ -1769,6 +1812,7 @@ window.resetForm = () => {
     youtubeUrl.style.borderColor = '';
   }
   renderYoutubePreview('');
+  renderInstagramPreview(null);
   document.getElementById('resultCard').classList.add('hidden');
   document.getElementById('result-yoon').classList.add('hidden');
   hideStickyBar();

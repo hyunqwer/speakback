@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const YTDlpWrap = require("yt-dlp-wrap").default;
 
 admin.initializeApp();
 
@@ -118,6 +119,46 @@ Return ONLY valid JSON - no markdown fences, no extra text:
 `;
 }
 
+// ---- 영상 URL 타입 감지 ----
+function detectVideoType(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    if (["youtube.com", "youtu.be", "youtube-nocookie.com"].includes(host)) return "youtube";
+    if (host === "instagram.com") return "instagram";
+  } catch (e) {}
+  return null;
+}
+
+// yt-dlp 바이너리 경로 (Lambda /tmp에 캐시)
+const YTDLP_BINARY = "/tmp/yt-dlp";
+
+async function getYtDlpBinary() {
+  if (!fs.existsSync(YTDLP_BINARY)) {
+    console.log("yt-dlp 바이너리 다운로드 중...");
+    await YTDlpWrap.downloadFromGithub(YTDLP_BINARY);
+    fs.chmodSync(YTDLP_BINARY, 0o755);
+    console.log("yt-dlp 바이너리 다운로드 완료");
+  }
+  return YTDLP_BINARY;
+}
+
+async function downloadVideoFromUrl(url) {
+  const binaryPath = await getYtDlpBinary();
+  const ytDlp = new YTDlpWrap(binaryPath);
+  const outputPath = `/tmp/video_${Date.now()}.mp4`;
+  await ytDlp.execPromise([
+    url,
+    "-o", outputPath,
+    "-f", "best[ext=mp4]/best[height<=720]/best",
+    "--no-playlist",
+    "--no-warnings",
+    "--socket-timeout", "30",
+  ]);
+  return outputPath;
+}
+
 // Extract the first complete JSON object from the model response.
 function extractJson(text) {
   const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "");
@@ -180,12 +221,13 @@ exports.evaluateSpeech = onRequest(
       return;
     }
 
-    const { youtubeUrl, storagePath, mimeType, studentName, studentLevel } = req.body;
+    const { youtubeUrl, instagramUrl, storagePath, mimeType, studentName, studentLevel } = req.body;
+    const videoUrl = instagramUrl || youtubeUrl;
     const rubricType = "yoon";
     const prompt = buildYoonPrompt(studentLevel, studentName);
 
-    if (!youtubeUrl && !storagePath) {
-      res.status(400).json({ error: "youtubeUrl 또는 storagePath가 필요합니다." });
+    if (!youtubeUrl && !instagramUrl && !storagePath) {
+      res.status(400).json({ error: "youtubeUrl, instagramUrl 또는 storagePath가 필요합니다." });
       return;
     }
 
@@ -197,11 +239,33 @@ exports.evaluateSpeech = onRequest(
       let contents;
 
       if (youtubeUrl) {
+        // YouTube: Gemini가 URL 직접 처리
         contents = [
           { text: prompt },
           { fileData: { fileUri: youtubeUrl, mimeType: "video/mp4" } },
         ];
+      } else if (instagramUrl) {
+        // Instagram: yt-dlp로 다운로드 후 Gemini File API 업로드
+        console.log("Instagram 영상 다운로드 시작:", instagramUrl);
+        tmpPath = await downloadVideoFromUrl(instagramUrl);
+        console.log("Instagram 영상 다운로드 완료:", tmpPath);
+
+        const uploadResult = await ai.files.upload({
+          file: tmpPath,
+          config: {
+            mimeType: "video/mp4",
+            displayName: studentName ? `${studentName}_instagram` : "instagram_video",
+          },
+        });
+
+        const readyFile = await waitForFileReady(ai, uploadResult.name);
+
+        contents = [
+          { text: prompt },
+          { fileData: { fileUri: readyFile.uri, mimeType: readyFile.mimeType } },
+        ];
       } else {
+        // 파일 업로드: Firebase Storage에서 다운로드 후 Gemini File API 업로드
         const bucket = admin.storage().bucket();
         const storageFile = bucket.file(storagePath);
         storageFileToDelete = storageFile;
@@ -235,7 +299,7 @@ exports.evaluateSpeech = onRequest(
       console.log("Gemini usage metadata", {
         studentName: studentName || "student",
         rubricType,
-        videoSource: youtubeUrl ? "youtube" : "file",
+        videoSource: youtubeUrl ? "youtube" : instagramUrl ? "instagram" : "file",
         usageMetadata: response.usageMetadata || response.usage_metadata || null,
       });
 
@@ -249,7 +313,7 @@ exports.evaluateSpeech = onRequest(
         studentLevel: studentLevel || "elementary_high",
         rubricType,
         evaluation,
-        videoSource: youtubeUrl ? "youtube" : "file",
+        videoSource: youtubeUrl ? "youtube" : instagramUrl ? "instagram" : "file",
         youtubeUrl: youtubeUrl || null,
         storagePath: storagePath || null,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),

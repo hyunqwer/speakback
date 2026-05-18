@@ -66,7 +66,7 @@
         <!-- 탭 -->
         <div class="video-tabs" role="tablist">
           <button class="video-tab active" id="tab-file" role="tab" aria-selected="true" aria-controls="panel-file" type="button">파일 업로드</button>
-          <button class="video-tab" id="tab-youtube" role="tab" aria-selected="false" aria-controls="panel-youtube" type="button">YouTube 링크</button>
+          <button class="video-tab" id="tab-youtube" role="tab" aria-selected="false" aria-controls="panel-youtube" type="button">영상 URL</button>
         </div>
 
         <!-- 파일 업로드 패널 -->
@@ -97,13 +97,14 @@
           </div>
         </div>
 
-        <!-- YouTube 패널 -->
+        <!-- 영상 URL 패널 -->
         <div class="tab-panel" id="panel-youtube" role="tabpanel">
           <div class="field">
-            <label class="field-lbl" for="youtubeUrl">YouTube URL</label>
-            <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" />
-            <p class="input-hint">YouTube, YouTube Shorts 링크를 붙여넣으세요.</p>
+            <label class="field-lbl" for="youtubeUrl">영상 URL</label>
+            <input type="url" id="youtubeUrl" placeholder="YouTube 또는 Instagram Reel URL 붙여넣기" autocomplete="off" />
+            <p class="input-hint">YouTube · YouTube Shorts · Instagram Reel 링크를 지원합니다.</p>
           </div>
+          <!-- YouTube 미리보기 -->
           <div id="youtubePreviewWrap" class="video-preview-wrap hidden">
             <iframe
               id="youtubePreview"
@@ -112,6 +113,16 @@
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
             ></iframe>
+          </div>
+          <!-- Instagram 확인 배지 -->
+          <div id="instagramPreviewWrap" class="instagram-preview-wrap hidden">
+            <div class="instagram-badge">
+              <span class="instagram-icon">📷</span>
+              <div class="instagram-badge-text">
+                <strong>Instagram Reel 확인됨</strong>
+                <span id="instagramUrlDisplay" class="instagram-url-display"></span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -291,16 +302,4 @@
         <div class="guide-step">
           <div class="guide-num">2</div>
           <div class="guide-desc">
-            <strong>영상 업로드 또는 YouTube 링크</strong>
-            <span>파일(최대 100MB) 또는 YouTube URL을 붙여넣어요</span>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-num">3</div>
-          <div class="guide-desc">
-            <strong>AI 피드백 확인 및 저장</strong>
-            <span>1~3분 후 코칭 결과를 PDF로 저장하거나 직접 편집할 수 있어요</span>
-          </div>
-        </div>
-      </div>
-      <p class="guide-note">분석에는 보통 1~3분이 소요되며, 영상�
+            <strong>영상 업로드 또는 YouTu

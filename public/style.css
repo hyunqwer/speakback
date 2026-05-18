@@ -1933,3 +1933,44 @@ details[open] > .area-details-summary::before { transform: rotate(90deg); }
   background: var(--blue-bg);
   border-radius: 5px;
 }
+
+/* ── Instagram 프리뷰 배지 ── */
+.instagram-preview-wrap {
+  margin-top: 12px;
+}
+
+.instagram-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fdf0f8 0%, #f0eeff 100%);
+  border: 1.5px solid #d886b8;
+  border-radius: 10px;
+}
+
+.instagram-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.instagram-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.instagram-badge-text strong {
+  font-size: 13px;
+  color: #7b2d8b;
+}
+
+.instagram-url-display {
+  font-size: 11px;
+  color: #999;
+  word-break: break-all;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
