@@ -92,8 +92,6 @@ function bindPageActions() {
   document.querySelectorAll(".level-card").forEach((btn) => {
     btn.addEventListener("click", () => setStudentLevel(btn.dataset.level));
   });
-  // 학부모 요약 복사 버튼
-  document.getElementById("copySummaryBtn")?.addEventListener("click", copySummary);
 }
 
 // ── 사용 방법 가이드 모달 ──────────────────────────────────
@@ -1287,44 +1285,6 @@ function toggleFeedbackEdit() {
     updateLocalFeedback(currentFeedbackId, currentEval);
   }
   setFeedbackEditable(feedbackEditMode);
-}
-
-async function copySummary() {
-  const el  = document.getElementById("fb-summary");
-  const btn = document.getElementById("copySummaryBtn");
-  if (!el || !btn) return;
-
-  const text = el.textContent.trim();
-  if (!text) return;
-
-  try {
-    await navigator.clipboard.writeText(text);
-    btn.textContent = "복사됨 ✓";
-    btn.classList.add("copy-btn--done");
-    setTimeout(() => {
-      btn.textContent = "복사";
-      btn.classList.remove("copy-btn--done");
-    }, 2000);
-  } catch {
-    // clipboard API 미지원 fallback
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-    try {
-      document.execCommand("copy");
-      btn.textContent = "복사됨 ✓";
-      btn.classList.add("copy-btn--done");
-      setTimeout(() => {
-        btn.textContent = "복사";
-        btn.classList.remove("copy-btn--done");
-      }, 2000);
-    } catch {
-      alert("복사에 실패했습니다. 텍스트를 직접 선택해 주세요.");
-    }
-    sel.removeAllRanges();
-  }
 }
 
 function setFeedbackEditable(on) {
