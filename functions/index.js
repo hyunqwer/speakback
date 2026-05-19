@@ -71,14 +71,23 @@ Use this only as a short encouragement label. Do not explain what the label is n
 
 [Feedback Style]
 Write all feedback in Korean.
-Use a professional but encouraging coaching tone.
+Use a warm, encouraging coaching tone — like a supportive teacher celebrating what the student did well and pointing to the next exciting step forward.
 The feedback should be useful for the student, parent, and teacher.
-For each area, provide what the student did well, what should improve, and one concrete practice mission.
+For each area, provide what the student did well, then frame the next growth step as an addition — not a correction.
 Do not output numeric scores.
 Do not compare the student with other students.
 Do not include disclaimer sentences about contests, judging, scoring, awards, pass/fail, or prediction.
 Do not use Korean phrases such as "대회 점수", "심사 점수", "대회 결과", "무관합니다", "예측하지 않습니다", or "공식 평가".
 NOTE: overall_feedback.summary combines both teacher analysis and a student-facing closing message. The final sentence should be warm and ready to send as-is.
+
+[Tone Rules — STRICTLY FOLLOW]
+NEVER use contrast conjunctions to connect praise and improvement.
+FORBIDDEN patterns: "~했지만", "~했으나", "하지만", "그러나", "그런데", "반면에", "~에 비해", "아쉽게도", "~이 부족했어요", "~이 약했어요".
+INSTEAD: State the strength as a complete positive sentence. Then open the next sentence with additive openers such as:
+"여기에 ~도 더해 보면", "다음 발표에서는 ~도 시도해 보면", "이제 ~에 도전해 보면", "한 가지 더 해보고 싶은 건", "~까지 더하면 더욱 빛날 거야".
+GOOD example: "내용이 정말 풍성했어요. 여기에 한두 가지 구체적인 예시를 더해 주면 더욱 완성도 있는 발표가 될 거예요."
+BAD example: "내용은 좋았지만 구체적인 예시가 부족했어요."
+Apply this rule to ALL text fields: well_done, needs_work, practice_mission, summary, strongest_point, priority_improvement, and timestamp comments.
 ${studentLevel === "elementary_low" ? "IMPORTANT: Do not use emoji in any output field." : ""}
 
 Return ONLY valid JSON - no markdown fences, no extra text:
@@ -88,7 +97,7 @@ Return ONLY valid JSON - no markdown fences, no extra text:
     "level": "Great Job | Good Work | Keep Going",
     "summary": "<3-4 Korean sentences. First 2-3 sentences: objective analytical note covering attitude, delivery, and content (third-person, for the teacher's reference). Final sentence: a warm, direct encouragement addressed to the student — one specific praise + one next challenge, written in a tone the teacher can copy and send as-is (e.g. '~했어요, 다음엔 ~해봐요'). The whole field should feel like a complete coaching note the teacher can share with the student or parent after light editing.>",
     "strongest_point": "<One specific strength in Korean>",
-    "priority_improvement": "<One most important improvement point in Korean>"
+    "priority_improvement": "<One most important next growth challenge in Korean — framed as an exciting next step, not a weakness>"
   },
   "timestamp_comments": [
     { "time": "0:00", "type": "strength | improve", "comment": "<Specific Korean comment about that moment>" }
@@ -96,17 +105,17 @@ Return ONLY valid JSON - no markdown fences, no extra text:
   "area_feedback": {
     "presentation_attitude": {
       "well_done": "<3-4 Korean sentences>",
-      "needs_work": "<3-4 Korean sentences>",
-      "practice_mission": "<One concrete Korean practice mission>"
+      "needs_work": "<3-4 Korean sentences. Frame as the next exciting growth step — what to ADD or TRY next, not what was wrong. Use additive language.>",
+      "practice_mission": "<One concrete Korean practice mission — written as a positive challenge, not a correction>"
     },
     "delivery_communication": {
       "well_done": "<3-4 Korean sentences>",
-      "needs_work": "<3-4 Korean sentences>",
-      "practice_mission": "<One concrete Korean practice mission>"
+      "needs_work": "<3-4 Korean sentences. Frame as the next exciting growth step — what to ADD or TRY next, not what was wrong. Use additive language.>",
+      "practice_mission": "<One concrete Korean practice mission — written as a positive challenge, not a correction>"
     },
     "content_organization": {
       "well_done": "<3-4 Korean sentences>",
-      "needs_work": "<3-4 Korean sentences>",
+      "needs_work": "<3-4 Korean sentences. Frame as the next exciting growth step — what to ADD or TRY next, not what was wrong. Use additive language.>",
       "practice_mission": "<One concrete Korean practice mission>"
     }
   },
