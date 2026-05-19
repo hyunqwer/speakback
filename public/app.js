@@ -674,13 +674,16 @@ function detectVideoUrlType(url) {
 function renderInstagramPreview(url) {
   const wrap = document.getElementById("instagramPreviewWrap");
   const display = document.getElementById("instagramUrlDisplay");
+  const hint = document.getElementById("instagramHint");
   if (!wrap) return;
   if (!url) {
     wrap.classList.add("hidden");
+    if (hint) hint.classList.add("hidden");
     return;
   }
   if (display) display.textContent = url;
   wrap.classList.remove("hidden");
+  if (hint) hint.classList.remove("hidden");
 }
 
 function getNormalizedYoutubeUrl(url) {

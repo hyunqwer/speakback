@@ -1974,3 +1974,15 @@ details[open] > .area-details-summary::before { transform: rotate(90deg); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Instagram 안내 힌트 ── */
+.instagram-hint {
+  margin-top: 6px;
+  color: #7b2d8b;
+  background: #fdf0f8;
+  border-left: 3px solid #d886b8;
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
