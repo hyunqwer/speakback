@@ -674,16 +674,23 @@ function detectVideoUrlType(url) {
 function renderInstagramPreview(url) {
   const wrap = document.getElementById("instagramPreviewWrap");
   const display = document.getElementById("instagramUrlDisplay");
-  const hint = document.getElementById("instagramHint");
   if (!wrap) return;
   if (!url) {
     wrap.classList.add("hidden");
-    if (hint) hint.classList.add("hidden");
+    hideInstagramHint();
     return;
   }
   if (display) display.textContent = url;
   wrap.classList.remove("hidden");
-  if (hint) hint.classList.remove("hidden");
+  hideInstagramHint(); // URL 입력 시엔 힌트 숨김 — 오류 시에만 표시
+}
+
+function showInstagramHint() {
+  document.getElementById("instagramHint")?.classList.remove("hidden");
+}
+
+function hideInstagramHint() {
+  document.getElementById("instagramHint")?.classList.add("hidden");
 }
 
 function getNormalizedYoutubeUrl(url) {
@@ -843,6 +850,10 @@ async function runEvaluation(payload, meta) {
     displayResult(data.studentName, data.evaluation, localFeedbackId, data.rubricType || meta.rubricType);
   } catch (err) {
     setLoading(false);
+    // Instagram URL 분석 실패 시 비공개 안내 힌트 표시
+    if (payload.instagramUrl) {
+      showInstagramHint();
+    }
     showRetryBox(err.message);
   }
 }
@@ -1816,6 +1827,7 @@ window.resetForm = () => {
   }
   renderYoutubePreview('');
   renderInstagramPreview(null);
+  hideInstagramHint();
   document.getElementById('resultCard').classList.add('hidden');
   document.getElementById('result-yoon').classList.add('hidden');
   hideStickyBar();
