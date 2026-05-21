@@ -10,6 +10,7 @@ const YTDlpWrap = require("yt-dlp-wrap").default;
 admin.initializeApp();
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+const instagramCookies = defineSecret("INSTAGRAM_COOKIES");
 
 // Prompt settings
 const STUDENT_LEVEL_INSTRUCTIONS = {
@@ -211,18 +212,36 @@ async function getYtDlpBinary() {
   return YTDLP_BINARY;
 }
 
-async function downloadVideoFromUrl(url) {
+async function downloadVideoFromUrl(url, cookiesContent) {
   const binaryPath = await getYtDlpBinary();
   const ytDlp = new YTDlpWrap(binaryPath);
   const outputPath = `/tmp/video_${Date.now()}.mp4`;
-  await ytDlp.execPromise([
+
+  const args = [
     url,
     "-o", outputPath,
     "-f", "best[ext=mp4]/best[height<=720]/best",
     "--no-playlist",
     "--no-warnings",
     "--socket-timeout", "30",
-  ]);
+  ];
+
+  // 쿠키가 있으면 /tmp에 저장 후 전달
+  let cookiePath = null;
+  if (cookiesContent) {
+    cookiePath = `/tmp/ig_cookies_${Date.now()}.txt`;
+    fs.writeFileSync(cookiePath, cookiesContent, "utf-8");
+    args.push("--cookies", cookiePath);
+  }
+
+  try {
+    await ytDlp.execPromise(args);
+  } finally {
+    if (cookiePath && fs.existsSync(cookiePath)) {
+      fs.unlinkSync(cookiePath);
+    }
+  }
+
   return outputPath;
 }
 
@@ -267,7 +286,7 @@ async function waitForFileReady(ai, fileName) {
 // Cloud Function: evaluateSpeech
 exports.evaluateSpeech = onRequest(
   {
-    secrets: [geminiApiKey],
+    secrets: [geminiApiKey, instagramCookies],
     timeoutSeconds: 300,
     memory: "1GiB",
     region: "asia-northeast3", // Seoul
@@ -314,7 +333,8 @@ exports.evaluateSpeech = onRequest(
       } else if (instagramUrl) {
         // Instagram: yt-dlp로 다운로드 후 Gemini File API 업로드
         console.log("Instagram 영상 다운로드 시작:", instagramUrl);
-        tmpPath = await downloadVideoFromUrl(instagramUrl);
+        const cookiesContent = instagramCookies.value() || null;
+        tmpPath = await downloadVideoFromUrl(instagramUrl, cookiesContent);
         console.log("Instagram 영상 다운로드 완료:", tmpPath);
 
         const uploadResult = await ai.files.upload({
