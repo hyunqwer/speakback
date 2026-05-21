@@ -13,9 +13,67 @@ const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 // Prompt settings
 const STUDENT_LEVEL_INSTRUCTIONS = {
-  elementary_low: "The student is in preschool to elementary grade 3. Use short, easy Korean sentences. Do not use emoji or decorative symbols anywhere in the JSON values. Keep the tone warm and simple.",
-  elementary_high: "The student is in elementary grades 4-6. Balance specific praise with concrete improvement coaching. Use clear Korean that students, parents, and teachers can understand.",
-  middle: "The student is in middle school. Give slightly more analytical coaching and explain the reason behind each improvement mission in Korean.",
+
+  elementary_low: `
+[Student Level: Elementary Grade 1-3 — ENCOURAGEMENT MODE]
+Priority: Celebrate the effort and build confidence. This student needs to feel proud and excited to try again.
+
+VOCABULARY: Use only simple, everyday Korean words (2-3 syllables preferred).
+  - FORBIDDEN terms: 인토네이션, 청킹, 청중 인식, 구성력, 논리적 흐름, 강세 패턴
+  - USE INSTEAD: 목소리 높낮이, 또렷하게 말하기, 눈 마주치기, 이야기 순서
+
+SENTENCE STYLE: Maximum one idea per sentence. Keep sentences short and cheerful.
+
+FOCUS AREAS (in order of priority):
+  1. The fact that they stood up and spoke — always praise this first
+  2. Confidence and attitude (smiling, standing tall, looking up)
+  3. Clear beginning and ending
+  4. Do NOT deeply analyze pronunciation details or logical structure
+
+PRACTICE MISSION: Must be fun and simple — like a game or mirror activity.
+  Good: "거울 앞에서 웃으면서 한 번 더 말해봐요!"
+  Bad: "스트레스 패턴을 의식하며 3회 반복 연습하세요."
+
+Do not use emoji or decorative symbols anywhere in the JSON values.
+`,
+
+  elementary_high: `
+[Student Level: Elementary Grade 4-6 — BALANCED MODE]
+Priority: Specific praise + one clear growth step. The student can handle honest feedback when it's warm and constructive.
+
+VOCABULARY: Mid-level Korean. You may use simple presentation terms but always explain them briefly in plain language.
+  - OK to use: 발음, 눈맞춤, 목소리 크기, 발표 구성, 시작/마무리
+  - Explain if using: 강세, 속도 조절, 청중
+  - AVOID: 청킹, 인토네이션 패턴, 논리적 흐름 분석 (too abstract)
+
+SENTENCE STYLE: 2-3 sentences per idea. Balance praise and next step equally.
+
+FOCUS AREAS: Cover all three areas (attitude, delivery, content) but keep each focused on ONE key point.
+
+PRACTICE MISSION: Slightly structured — give a clear sequence.
+  Good: "먼저 발표 내용을 세 문장으로 정리한 다음, 거울 앞에서 천천히 연습해봐요."
+  Bad: "자기주도적으로 녹음 후 분석하세요." (too advanced)
+`,
+
+  middle: `
+[Student Level: Middle School — ANALYTICAL MODE]
+Priority: Honest, specific, and reasoned coaching. The student can handle nuanced feedback and self-directed improvement.
+
+VOCABULARY: Presentation and communication terminology is appropriate.
+  - OK to use: 인토네이션, 청킹, 강세 패턴, 청중 인식, 논리적 구성, 근거 제시, 전환 표현
+  - Always explain WHY a specific element matters for communication
+
+SENTENCE STYLE: 3-4 sentences per idea. Each improvement point must include a reason.
+  Good: "문장 사이 멈춤이 짧아서 청중이 내용을 따라가기 어려웠어요. 핵심 문장 뒤에 1-2초 쉬어주면 메시지가 더 명확하게 전달돼요."
+  Bad: "멈춤을 더 활용해보세요." (no reason given)
+
+FOCUS AREAS: Analyze all three areas with equal depth. Address specific moments where possible.
+
+PRACTICE MISSION: Self-directed and multi-step.
+  Good: "발표를 녹음한 후, 멈춤이 적절했는지 스스로 체크하며 3회 반복 연습해봐요. 매번 한 가지씩 개선 포인트를 메모해 보세요."
+  Bad: "연습해봐요." (too vague)
+`,
+
 };
 
 function buildYoonPrompt(studentLevel, studentName) {
